@@ -1,0 +1,29 @@
+{
+  "name": "ElectronBot",
+  "version": "1.0.0",
+  "description": "Electron Auto Accepter",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build ": {
+    "appId": "com.electronautoaccepter.app",
+    "mac": {
+      "category": "com.electronautoaccepter.category"
+    }
+  },
+  "keywords": [],
+  "author": "Siam Smeets",
+  "license": "ISC",
+  "postinstall": "electron-builder install-app-deps",
+  "devDependencies": {
+    "electron": "^10.1.2",
+    "electron-builder": "^22.8.1"
+  },
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "node-fetch": "^2.6.1"
+  }
+}
