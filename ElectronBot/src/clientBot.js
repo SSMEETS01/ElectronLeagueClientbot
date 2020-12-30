@@ -1,7 +1,11 @@
 const fetch = require('node-fetch');
 const {
   dialog
+} = require('electron');
+const {
+  ipcMain
 } = require('electron')
+
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 const btoa = (string) => {
@@ -9,13 +13,26 @@ const btoa = (string) => {
 }
 
 class ClientAccepter {
-  constructor(Secret) {
+  constructor(Secret, gameName, userid, accountid, puuid) {
     this.gameId = 0;
     this.secret = Secret;
-    this.auth = `${btoa(`${Secret.USERNAME}:${Secret.PASSWORD}`)}`;
+    this.auth = this.secret.AUTH;
+    this.riotAPI = 'https://euw1.api.riotgames.com/';
+    this.gameName = gameName;
+    this.userId = userid;
+    this.accountId = accountid;
+    this.puuId = puuid;
+  }
+
+  LogUserInfo() {
+    console.log("GameName: ", this.gameName);
+    console.log("UserId: ", this.userId);
+    console.log("AccountId: ", this.accountId);
+    console.log("puuId: ", this.puuId);
   }
 
   APIRequest(endpoint, method) {
+    // TODO: Look into how to alert or show in a textarea some comments about the requests.
     // console.log(`Starting ${method} ${endpoint}`);
 
     return fetch(`${this.secret.PROTOCOL}${this.secret.HOST}:${this.secret.PORT}${endpoint}`, {
@@ -27,6 +44,7 @@ class ClientAccepter {
       })
       .then(res => res.json())
       .then(res => {
+        // TODO: See first TODO
         // console.log(`${method} request finished for: ${endpoint}`);
         return res;
       });
@@ -68,7 +86,5 @@ class ClientAccepter {
     }, 1000);
   };
 }
-
-
 
 module.exports = ClientAccepter;

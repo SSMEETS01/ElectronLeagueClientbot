@@ -2,10 +2,15 @@ const {
   app,
   BrowserWindow,
   ipcMain
-} = require('electron')
+} = require('electron');
+const fetch = require('node-fetch');
+const Secret = require('./secret');
+const bot = require('./clientBot');
+var User, accountId, puuId, userId, clientBot;
+
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 function createWindow() {
-  // Create the browser window.
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
@@ -15,18 +20,42 @@ function createWindow() {
     frame: false
   });
 
-  // and load the index.html of the app.
   win.loadFile('./index.html');
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(createWindow);
+async function getLocalUser() {
+  var response = await fetch(`${Secret.PROTOCOL}${Secret.HOST}:${Secret.PORT}/lol-chat/v1/me`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Basic ${Secret.AUTH}`,
+    }
+  })
+  User = await response.json();
+}
+async function getUserInfo() {
+  var response = await fetch(`https://euw1.api.riotgames.com//lol/summoner/v4/summoners/by-name/${User.gameName}?api_key=${Secret.TOKEN})`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Origin: 'https://developer.riotgames.com',
+      'X-Riot-Token': Secret.TOKEN
+    }
+  })
+  response = await response.json();
+  userId = response.id;
+  accountId = response.accountId;
+  puuId = response.puuid
+}
+getLocalUser();
+setTimeout(() => {
+  getUserInfo();
+  setTimeout(() => {
+    clientBot = new bot(Secret, User.gameName, userId, accountId, puuId)
+    app.whenReady().then(createWindow);
+  }, 2000);
+}, 5500);
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
@@ -34,18 +63,11 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-const Secret = require('./secret');
-const bot = require('./clientBot');
-const clientBot = new bot(Secret);
 
 ipcMain.on("startAccepter", async function (event, arg) {
   await clientBot.AutoAccepter();
